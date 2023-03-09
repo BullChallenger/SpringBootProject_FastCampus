@@ -41,6 +41,10 @@ public class ArticleCommentDto {
         return new ArticleCommentDto(id, articleId, userAccountDto, content, createdAt, createdBy, modifiedAt, modifiedBy);
     }
 
+    public static ArticleCommentDto of(Long articleId, UserAccountDto userAccountDto, Long parentCommentId, String content) {
+        return new ArticleCommentDto(null, articleId, userAccountDto, parentCommentId, content, null, null, null, null);
+    }
+
     public static ArticleCommentDto from(ArticleComment articleComment) {
         return new ArticleCommentDto(
                 articleComment.getId(),
