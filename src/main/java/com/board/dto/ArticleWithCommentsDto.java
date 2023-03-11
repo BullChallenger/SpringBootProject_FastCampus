@@ -1,6 +1,7 @@
 package com.board.dto;
 
 import com.board.domain.Article;
+import com.board.domain.Hashtag;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
@@ -21,7 +22,7 @@ public class ArticleWithCommentsDto {
 
     private final String content;
 
-    private final String hashtag;
+    private final Set<HashtagDto> hashtagDtos;
 
     private final LocalDateTime createdAt;
 
@@ -32,14 +33,14 @@ public class ArticleWithCommentsDto {
     private final String modifiedBy;
 
     public ArticleWithCommentsDto(Long id, UserAccountDto userAccountDto, Set<ArticleCommentDto> articleCommentDtos,
-                                  String title, String content, String hashtag, LocalDateTime createdAt, String createdBy,
+                                  String title, String content, Set<HashtagDto> hashtagDtos, LocalDateTime createdAt, String createdBy,
                                   LocalDateTime modifiedAt, String modifiedBy) {
         this.id = id;
         this.userAccountDto = userAccountDto;
         this.articleCommentDtos = articleCommentDtos;
         this.title = title;
         this.content = content;
-        this.hashtag = hashtag;
+        this.hashtagDtos = hashtagDtos;
         this.createdAt = createdAt;
         this.createdBy = createdBy;
         this.modifiedAt = modifiedAt;
@@ -47,9 +48,9 @@ public class ArticleWithCommentsDto {
     }
 
     public static ArticleWithCommentsDto of(Long id, UserAccountDto userAccountDto, Set<ArticleCommentDto> articleCommentDtos,
-                                            String title, String content, String hashtag, LocalDateTime createdAt, String createdBy,
+                                            String title, String content, Set<HashtagDto> hashtagDtos, LocalDateTime createdAt, String createdBy,
                                             LocalDateTime modifiedAt, String modifiedBy) {
-        return new ArticleWithCommentsDto(id, userAccountDto, articleCommentDtos, title, content, hashtag, createdAt, createdBy, modifiedAt, modifiedBy);
+        return new ArticleWithCommentsDto(id, userAccountDto, articleCommentDtos, title, content, hashtagDtos, createdAt, createdBy, modifiedAt, modifiedBy);
     }
 
     public static ArticleWithCommentsDto from(Article entity) {
@@ -62,7 +63,9 @@ public class ArticleWithCommentsDto {
                 ,
                 entity.getTitle(),
                 entity.getContent(),
-                entity.getHashtag(),
+                entity.getHashtags().stream()
+                        .map(HashtagDto::from)
+                        .collect(Collectors.toUnmodifiableSet()),
                 entity.getCreatedAt(),
                 entity.getCreatedBy(),
                 entity.getModifiedAt(),

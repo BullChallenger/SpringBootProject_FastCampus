@@ -4,6 +4,7 @@ import com.board.dto.ArticleDto;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Getter
 public class ArticleResponse {
@@ -14,7 +15,7 @@ public class ArticleResponse {
 
     private final String content;
 
-    private final String hashtag;
+    private final Set<String> hashtags;
 
     private final LocalDateTime createdAt;
 
@@ -22,19 +23,19 @@ public class ArticleResponse {
 
     private final String nickname;
 
-    public ArticleResponse(Long id, String title, String content, String hashtag, LocalDateTime createdAt, String email,
+    public ArticleResponse(Long id, String title, String content, Set<String> hashtags, LocalDateTime createdAt, String email,
                            String nickname) {
         this.id = id;
         this.title = title;
         this.content = content;
-        this.hashtag = hashtag;
+        this.hashtags = hashtags;
         this.createdAt = createdAt;
         this.email = email;
         this.nickname = nickname;
     }
 
-    public static ArticleResponse of(Long id, String title, String content, String hashtag, LocalDateTime createdAt, String email, String nickname) {
-        return new ArticleResponse(id, title, content, hashtag, createdAt, email, nickname);
+    public static ArticleResponse of(Long id, String title, String content, Set<String> hashtags, LocalDateTime createdAt, String email, String nickname) {
+        return new ArticleResponse(id, title, content, hashtags, createdAt, email, nickname);
     }
 
     public static ArticleResponse from(ArticleDto articleDto) {
@@ -47,7 +48,7 @@ public class ArticleResponse {
                 articleDto.getId(),
                 articleDto.getTitle(),
                 articleDto.getContent(),
-                articleDto.getHashtag(),
+                articleDto.,
                 articleDto.getCreatedAt(),
                 articleDto.getUserAccountDto().getEmail(),
                 nickname

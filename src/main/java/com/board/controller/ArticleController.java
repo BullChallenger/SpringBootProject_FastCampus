@@ -3,8 +3,10 @@ package com.board.controller;
 import com.board.domain.type.FormStatus;
 import com.board.domain.type.SearchType;
 import com.board.dto.ArticleWithCommentsDto;
+import com.board.dto.request.ArticleRequest;
 import com.board.dto.response.ArticleResponse;
 import com.board.dto.response.ArticleWithCommentsResponse;
+import com.board.dto.security.BoardPrincipal;
 import com.board.repository.ArticleRepository;
 import com.board.service.ArticleService;
 import com.board.service.PaginationService;
@@ -48,7 +50,7 @@ public class ArticleController {
 
     @GetMapping(value = "/{articleId}")
     public String article(@PathVariable Long articleId, ModelMap map) {
-        ArticleWithCommentsResponse article = ArticleWithCommentsResponse.from(articleService.getArticle(articleId));
+        ArticleWithCommentsResponse article = ArticleWithCommentsResponse.from(articleService.getArticleWithComments(articleId));
         map.addAttribute("article", article);
         map.addAttribute("articleComments", article.getArticleCommentResponse());
 
@@ -82,9 +84,41 @@ public class ArticleController {
 
     @PostMapping("/form")
     public String postNewArticle(
+            @AuthenticationPrincipal BoardPrincipal boardPrincipal,
             ArticleRequest articleRequest
     ) {
         articleService.saveArticle(articleRequest.toDto(boardPrincipal.toDto()));
+
+        return "redirect:/articles";
+    }
+
+    @GetMapping("/{articleId}/form")
+    public String updateArticleForm(@PathVariable Long articleId, ModelMap map) {
+        ArticleResponse article = ArticleResponse.from(articleService.getArticle(articleId));
+
+        map.addAttribute("article", article);
+        map.addAttribute("formStatus", FormStatus.UPDATE);
+
+        return "articles/form";
+    }
+
+    @PostMapping("/{articleId}/form")
+    public String updateArticle(
+            @PathVariable Long articleId,
+            @AuthenticationPrincipal BoardPrincipal boardPrincipal,
+            ArticleRequest articleRequest
+    ) {
+        articleService.up   dateArticle(articleId, articleRequest.toDto(boardPrincipal.toDto()));
+
+        return "redirect:/articles";
+    }
+
+    @PostMapping("/{articleId}/delete")
+    public String deleteArticle(
+            @PathVariable Long articleId,
+            @AuthenticationPrincipal BoardPrincipal boardPrincipal
+    ) {
+        articleService.deleteArticle(articleId, boardPrincipal.getUsername());
 
         return "redirect:/articles";
     }

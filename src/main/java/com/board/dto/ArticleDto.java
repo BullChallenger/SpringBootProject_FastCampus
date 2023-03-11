@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Getter
 public class ArticleDto {
@@ -19,7 +21,7 @@ public class ArticleDto {
 
     private final String content;
 
-    private final String hashtag;
+    private final Set<HashtagDto> hashtagDtos;
 
     private final LocalDateTime createdAt;
 
@@ -29,26 +31,26 @@ public class ArticleDto {
 
     private final String modifiedBy;
 
-    public ArticleDto(Long id, UserAccountDto userAccountDto, String title, String content, String hashtag, LocalDateTime createdAt, String createdBy, LocalDateTime modifiedAt,
-                      String modifiedBy) {
+    public ArticleDto(Long id, UserAccountDto userAccountDto, String title, String content, Set<HashtagDto> hashtagDtos,
+                      LocalDateTime createdAt, String createdBy, LocalDateTime modifiedAt, String modifiedBy) {
         this.id = id;
         this.userAccountDto = userAccountDto;
         this.title = title;
         this.content = content;
-        this.hashtag = hashtag;
+        this.hashtagDtos = hashtagDtos;
         this.createdAt = createdAt;
         this.createdBy = createdBy;
         this.modifiedAt = modifiedAt;
         this.modifiedBy = modifiedBy;
     }
 
-    public static ArticleDto of(UserAccountDto userAccountDto, String title, String content, String hashtag) {
-        return new ArticleDto(null, userAccountDto, title, content, hashtag, null, null, null, null);
+    public static ArticleDto of(UserAccountDto userAccountDto, String title, String content, Set<HashtagDto> hashtagDtos) {
+        return new ArticleDto(null, userAccountDto, title, content, hashtagDtos, null, null, null, null);
     }
 
-    public static ArticleDto of(Long id, UserAccountDto userAccountDto, String title, String content, String hashtag,
+    public static ArticleDto of(Long id, UserAccountDto userAccountDto, String title, String content, Set<HashtagDto> hashtagDtos,
                                 LocalDateTime createdAt, String createdBy, LocalDateTime modifiedAt, String modifiedBy) {
-        return new ArticleDto(id, userAccountDto, title, content, hashtag, createdAt, createdBy, modifiedAt, modifiedBy);
+        return new ArticleDto(id, userAccountDto, title, content, hashtagDtos, createdAt, createdBy, modifiedAt, modifiedBy);
     }
 
     public static ArticleDto from(Article article) {
@@ -57,7 +59,9 @@ public class ArticleDto {
                 UserAccountDto.from(article.getUserAccount()),
                 article.getTitle(),
                 article.getContent(),
-                article.getHashtag(),
+                article.getHashtags().stream()
+                        .map(HashtagDto::from)
+                        .collect(Collectors.toUnmodifiableSet()),
                 article.getCreatedAt(),
                 article.getCreatedBy(),
                 article.getModifiedAt(),

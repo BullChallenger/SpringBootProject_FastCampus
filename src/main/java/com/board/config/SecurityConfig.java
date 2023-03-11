@@ -1,6 +1,7 @@
 package com.board.config;
 
 import com.board.dto.UserAccountDto;
+import com.board.dto.security.BoardPrincipal;
 import com.board.repository.UserAccountRepository;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
@@ -9,7 +10,12 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+
+import javax.persistence.EntityNotFoundException;
 
 @Configuration
 public class SecurityConfig {
@@ -18,7 +24,9 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth ->
-                        auth.mvcMatchers(
+                        auth
+                                .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
+                                .mvcMatchers(
                                 HttpMethod.GET,
                                 "/",
                                 "/articles",
@@ -26,18 +34,24 @@ public class SecurityConfig {
                         ).permitAll()
                                 .anyRequest().authenticated()
                 )
-                .formLogin();
+                .formLogin()
+            .and()
+                .logout()
+                .logoutSuccessUrl("/");
 
         return http.build();
     }
 
     @Bean
-    public WebSecurityCustomizer webSecurityCustomizer() {
-        return (web) -> web.ignoring().requestMatchers(PathRequest.toStaticResources().atCommonLocations());
+    public UserDetailsService userDetailsService(UserAccountRepository userAccountRepository) {
+        return username -> userAccountRepository.findById(username)
+                .map(UserAccountDto::from)
+                .map(BoardPrincipal::from)
+                .orElseThrow(() -> new UsernameNotFoundException("유저를 찾을 수 없습니다."));
     }
 
     @Bean
-    public UserDetailsService userDetailsService(UserAccountRepository userAccountRepository) {
-        return username -> userAccountRepository.findById(username).map(UserAccountDto::from).map(principal);
+    public PasswordEncoder passwordEncoder() {
+        return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 }

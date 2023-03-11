@@ -1,11 +1,13 @@
 package com.board.service;
 
 import com.board.domain.Article;
+import com.board.domain.UserAccount;
 import com.board.domain.type.SearchType;
 import com.board.dto.ArticleDto;
 import com.board.dto.ArticleUpdateDto;
 import com.board.dto.ArticleWithCommentsDto;
 import com.board.repository.ArticleRepository;
+import com.board.repository.UserAccountRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -21,6 +23,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Transactional
 public class ArticleService {
+    private final UserAccountRepository userAccountRepository;
 
     private final ArticleRepository articleRepository;
 
@@ -40,8 +43,15 @@ public class ArticleService {
     }
 
     @Transactional(readOnly = true)
-    public ArticleWithCommentsDto getArticle(long articleId) {
-        return articleRepository.findById(articleId).map(ArticleWithCommentsDto::from)
+    public ArticleWithCommentsDto getArticleWithComments(Long articleId) {
+        return articleRepository.findById(articleId)
+                .map(ArticleWithCommentsDto::from)
+                .orElseThrow(() -> new EntityNotFoundException("게시글이 없습니다 - articleId: " + articleId));
+    }
+
+    @Transactional(readOnly = true)
+    public ArticleDto getArticle(long articleId) {
+        return articleRepository.findById(articleId).map(ArticleDto::from)
                 .orElseThrow(() -> new EntityNotFoundException("해당 게시글이 존재하지 않습니다."));
     }
 
@@ -49,23 +59,27 @@ public class ArticleService {
         articleRepository.save(articleDto.toEntity());
     }
 
-    public void updateArticle(ArticleDto articleDto) {
+    public void updateArticle(Long articleId, ArticleDto articleDto) {
         try {
             Article article = articleRepository.getReferenceById(articleDto.getId());
-            if (articleDto.getTitle() != null) {
-                article.setTitle(articleDto.getTitle());
+            UserAccount userAccount = userAccountRepository.getReferenceById(articleDto.getUserAccountDto().getUserId());
+
+            if (article.getUserAccount().equals(userAccount)) {
+                if (articleDto.getTitle() != null) {
+                    article.setTitle(articleDto.getTitle());
+                }
+                if (articleDto.getContent() != null) {
+                    article.setTitle(articleDto.getContent());
+                }
+                article.setHashtag(articleDto.getHashtag());
             }
-            if (articleDto.getContent() != null) {
-                article.setTitle(articleDto.getContent());
-            }
-            article.setHashtag(articleDto.getHashtag());
         } catch (EntityNotFoundException e) {
             log.warn("게시글 업데이트 실패, 게시글을 찾을 수 없습니다.");
         }
     }
 
-    public void deleteArticle(long articleId) {
-        articleRepository.deleteById(articleId);
+    public void deleteArticle(long articleId, String userId) {
+        articleRepository.deleteByIdAndUserAccount_UserId(articleId, userId);
     }
 
     public long getArticleCount() {
