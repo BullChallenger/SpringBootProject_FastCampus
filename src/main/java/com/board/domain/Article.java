@@ -10,6 +10,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -56,6 +57,10 @@ public class Article extends AuditingFields {
         this.userAccount = userAccount;
         this.title = title;
         this.content = content;
+    }
+
+    public void addHashtags(Collection<Hashtag> hashtags) {
+        this.getHashtags().addAll(hashtags);
     }
 
     public static Article of(UserAccount userAccount, String title, String content) {

@@ -1,10 +1,16 @@
 package com.board.dto.response;
 
+import com.board.dto.ArticleCommentDto;
 import com.board.dto.ArticleWithCommentsDto;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Getter
 public class ArticleWithCommentsResponse {
@@ -62,5 +68,24 @@ public class ArticleWithCommentsResponse {
                 articleWithCommentsDto.getUserAccountDto().getUserId(),
                 organizeChildComments(articleWithCommentsDto.getArticleCommentDtos())
         );
+    }
+
+    private static Set<ArticleCommentResponse> organizeChildComments(Set<ArticleCommentDto> articleCommentDtos) {
+        Map<Long, ArticleCommentResponse> map = articleCommentDtos.stream()
+                .map(ArticleCommentResponse::from)
+                .collect(Collectors.toMap(ArticleCommentResponse::getId, Function.identity()));
+
+        map.values().stream()
+                .filter(ArticleCommentResponse::hasParentComment)
+                .forEach(comment -> {
+                    ArticleCommentResponse parentComment = map.get(comment.getParentCommentId());
+                    parentComment.getChildComments().add(comment);
+                });
+
+        return map.values().stream()
+                .filter(comment -> !comment.hasParentComment())
+                .collect(Collectors.toCollection( () -> new TreeSet<>(Comparator
+                        .comparing(ArticleCommentResponse::getCreatedAt).reversed()
+                        .thenComparing(ArticleCommentResponse::getId))));
     }
 }

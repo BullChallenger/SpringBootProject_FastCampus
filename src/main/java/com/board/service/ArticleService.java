@@ -1,12 +1,14 @@
 package com.board.service;
 
 import com.board.domain.Article;
+import com.board.domain.Hashtag;
 import com.board.domain.UserAccount;
 import com.board.domain.type.SearchType;
 import com.board.dto.ArticleDto;
 import com.board.dto.ArticleUpdateDto;
 import com.board.dto.ArticleWithCommentsDto;
 import com.board.repository.ArticleRepository;
+import com.board.repository.HashtagRepository;
 import com.board.repository.UserAccountRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -24,8 +27,9 @@ import java.util.List;
 @Transactional
 public class ArticleService {
     private final UserAccountRepository userAccountRepository;
-
     private final ArticleRepository articleRepository;
+    private final HashtagService hashtagService;
+    private final HashtagRepository hashtagRepository;
 
     @Transactional(readOnly = true)
     public Page<ArticleDto> searchArticles(SearchType searchType, String searchKeyword, Pageable pageable) {
@@ -56,7 +60,12 @@ public class ArticleService {
     }
 
     public void saveArticle(ArticleDto articleDto) {
-        articleRepository.save(articleDto.toEntity());
+        UserAccount userAccount = userAccountRepository.getReferenceById(articleDto.getUserAccountDto().getUserId());
+        Set<Hashtag> hashtags = renewHashtagsFromContent(articleDto.getContent());
+
+        Article article = articleDto.toEntity(userAccount);
+        article.addHashtags(hashtags);
+        articleRepository.save(article);
     }
 
     public void updateArticle(Long articleId, ArticleDto articleDto) {
@@ -97,5 +106,8 @@ public class ArticleService {
 
     public List<String> getHashtags() {
         return articleRepository.findAllDistinctHashtags();
+    }
+
+    private Set<Hashtag> renewHashtagsFromContent(String content) {
     }
 }
